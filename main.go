@@ -6,25 +6,6 @@ import (
 	"time"
 )
 
-/*
-	Buatlah sebuah script permainan dadu yang menerima input N jumlah pemain dan M jumlah
-	dadu, dengan peraturan sebagai berikut:
-	1. Pada awal permainan, setiap pemain mendapatkan dadu sejumlah M unit.
-	2. Semua pemain akan melemparkan dadu mereka masing-masing secara bersamaan
-	3. Setiap pemain akan mengecek hasil dadu lemparan mereka dan melakukan evaluasi
-	seperti berikut:
-	a. Dadu angka 6 akan dikeluarkan dari permainan dan ditambahkan sebagai poin
-	bagi pemain tersebut.
-	b. Dadu angka 1 akan diberikan kepada pemain yang duduk disampingnya.
-	Contoh, pemain pertama akan memberikan dadu angka 1 nya ke pemain kedua.
-	c. Dadu angka 2,3,4 dan 5 akan tetap dimainkan oleh pemain.
-	4. Setelah evaluasi, pemain yang masih memiliki dadu akan mengulangi step yang ke-2
-	sampai tinggal 1 pemain yang tersisa.
-	a. Untuk pemain yang tidak memiliki dadu lagi dianggap telah selesai bermain.
-	5. Pemain yang memiliki poin terbanyak lah yang menang.
-	Buatlah script ini menggunakan bahasa yang kamu kuasai.
-*/
-
 // inisiasi struct player
 type Player struct {
 	Dice         []int
@@ -60,7 +41,7 @@ func PlayDice2(jumlahPemain int, jumlahDadu int) {
 	fmt.Printf("Pemain = %v, Dadu = %v\n", jumlahPemain, jumlahDadu)
 
 	fmt.Println("==================")
-	for i := 0; i < 99; i++ {
+	for i := 0; ; i++ {
 		// lempar dadu
 		fmt.Printf("Giliran %v lempar dadu:\n", i+1)
 		for i := range players {
@@ -78,13 +59,40 @@ func PlayDice2(jumlahPemain int, jumlahDadu int) {
 				// for j := range players[i].Dice {
 				// fmt.Println("len dice (", len(player.Dice), "), j ke-", j)
 				if players[i].Dice[j] == 1 {
-					if i == len(players)-1 && !players[0].IsFinished {
-						players[0].AcquiredDice = append(players[0].AcquiredDice, 1)
-						players[0].Dice = append(players[0].Dice, players[0].AcquiredDice...)
-						players[0].AcquiredDice = nil
-					} else {
-						players[i+1].AcquiredDice = append(players[i+1].AcquiredDice, 1)
+					// fmt.Println("INI I NYA : ", i)
+					var y = i
+					for {
+						if y == len(players)-1 && !players[0].IsFinished {
+							// fmt.Println("ERROR A INI I: ", y)
+
+							players[0].AcquiredDice = append(players[0].AcquiredDice, 1)
+							players[0].Dice = append(players[0].Dice, players[0].AcquiredDice...)
+							players[0].AcquiredDice = nil
+							break
+						} else if y != len(players)-1 && !players[y+1].IsFinished {
+							// fmt.Println("ERROR B INI I: ", y)
+
+							players[y+1].AcquiredDice = append(players[y+1].AcquiredDice, 1)
+							break
+						} else {
+							// fmt.Println("ERROR C INI I: ", y)
+							if y == len(players)-1 {
+								y = 0
+							} else {
+								y++
+							}
+							// fmt.Println("INI I++: ", y)
+						}
 					}
+					// if i == len(players)-1 && !players[0].IsFinished {
+					// 	players[0].AcquiredDice = append(players[0].AcquiredDice, 1)
+					// 	players[0].Dice = append(players[0].Dice, players[0].AcquiredDice...)
+					// 	players[0].AcquiredDice = nil
+					// } else {
+					// 	players[i+1].AcquiredDice = append(players[i+1].AcquiredDice, 1)
+					// }
+					// fmt.Println("ERROR D INI I: ", i)
+
 					players[i].Dice = append(players[i].Dice[:j], players[i].Dice[j+1:]...)
 					j--
 					// fmt.Println("dapat 1")
@@ -106,23 +114,23 @@ func PlayDice2(jumlahPemain int, jumlahDadu int) {
 		}
 
 		// ini buat ngeprint hasil setelah evalnya
-		remainingPlayer := jumlahPemain
-		fmt.Println("Setelah evaluasi:")
+		sisaPlayer := jumlahPemain
+		fmt.Println("\nSetelah evaluasi:")
 		for i := range players {
 			fmt.Printf("Pemain#%v (%v): %v\n", i+1, players[i].Points, players[i].Dice)
 			if len(players[i].Dice) == 0 {
-				remainingPlayer--
+				sisaPlayer--
 				players[i].IsFinished = true
-				fmt.Printf("Player ke-%v telah selesai bermain\n", i+1)
+				// fmt.Printf("Player ke-%v telah selesai bermain\n", i+1)
 			}
 		}
 
 		fmt.Println("=================================")
-		fmt.Println("remainingPlayer: ", remainingPlayer)
+		fmt.Println("sisa player: ", sisaPlayer)
 		fmt.Println("=================================")
 
 		// break kalo udah sisa 1 player
-		if remainingPlayer <= 1 {
+		if sisaPlayer <= 1 {
 			// cek pemenang
 			maxPoints := 0
 			winner := 0
@@ -135,16 +143,6 @@ func PlayDice2(jumlahPemain int, jumlahDadu int) {
 			}
 
 			fmt.Println("Pemenangnya adalah pemain ke-", winner+1, "dengan skor", maxPoints, "poin")
-
-			// return winner
-			// var winner Player
-			// // fmt.Println(winner.Points)
-			// for i := range players {
-			// 	if players[i].Points > winner.Points {
-			// 		winner = players[i]
-			// 	}
-			// }
-			// fmt.Println("winner: ", winner)
 			break
 		}
 	}
@@ -153,11 +151,13 @@ func PlayDice2(jumlahPemain int, jumlahDadu int) {
 func main() {
 	rand.Seed(time.Now().UnixNano())
 
-	// PlayDice1(3, 4)
+	// for i := 0; i < 10; i++ {
+	PlayDice2(rand.Intn(10)+1, rand.Intn(10)+1)
+	// }
 
-	var m, n int
-	fmt.Println("masukkan jumlah pemain dan jumlah dadu: ")
-	fmt.Scanln(&m, &n)
-	PlayDice2(m, n)
+	// var m, n int
+	// fmt.Println("masukkan jumlah pemain dan jumlah dadu: ")
+	// fmt.Scanln(&m, &n)
+	// PlayDice2(m, n)
 
 }
